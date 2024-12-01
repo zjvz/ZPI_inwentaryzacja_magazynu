@@ -14,22 +14,22 @@ module.exports = (passport) => {
           return done(null, false, { message: 'Nieprawidłowy login' });
         }
 
-        // Match password
-        bcrypt.compare(password, user.password, (err, isMatch) => {
-          if (err) throw err;
-          if (isMatch) {
-            return done(null, user);
-          } else {
-            return done(null, false, { message: 'Hasło nieprawidłowe' });
-          }
-        });
-      });
-    })
-  );
+                // Match password
+                bcrypt.compare(password, user.password, (err, isMatch) => {
+                    if (err) throw err;
+                    if (isMatch) {
+                        return done(null, user);
+                    } else {
+                        return done(null, false, { message: 'Hasło nieprawidłowe' });
+                    }
+                });
+            });
+        })
+    );
 
-  passport.serializeUser((user, done) => {
-    done(null, user.id);
-  });
+    passport.serializeUser((user, done) => {
+        done(null, user.id);
+    });
 
   passport.deserializeUser((id, done) => {
     Pracownik.findById(id, (err, user) => {
