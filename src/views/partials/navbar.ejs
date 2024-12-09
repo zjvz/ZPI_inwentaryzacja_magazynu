@@ -1,0 +1,66 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">mRestaurant</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarColor01">
+        <ul class="navbar-nav me-auto">
+          <% if (user.role != 'Manager') { %>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Użytkownicy</a>
+              <div class="dropdown-menu">
+                <a class="dropdown-item" href="/users/">Lista</a>
+                <a class="dropdown-item" href="/users/add">Dodaj użytkownika</a>
+            </li>
+          <% } %>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Magazyny</a>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="/storages/">Lista</a>
+              <% if (user.role != 'Manager') { %>
+                <a class="dropdown-item" href="/storages/add/">Dodaj magazyn</a>
+              <% } %>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Produkty</a>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="/products/">Lista</a>
+              <% if (user.role != 'Manager') { %>
+                <a class="dropdown-item" href="/products/add/">Dodaj</a>
+              <% } %>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Pół-Produkty</a>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="/spproducts/">Lista</a>
+              <% if (user.role != 'Manager') { %>
+                <a class="dropdown-item" href="/spproducts/add/">Dodaj</a>
+              <% } %>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Dostawy</a>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="/supply/info">Lista dostaw</a>
+              <a class="dropdown-item" href="/supply/add">Zaplanuj dostawę</a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Dane</a>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="/data/add">Straty</a>
+              <a class="dropdown-item" href="/sale/add">Sprzedaż</a>
+              <a class="dropdown-item" href="/storages/inv/add">Dane magazynowe</a>
+              <a class="dropdown-item" href="/data/info">Zestawienie danych</a>
+          </li>
+
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">Moje konto</a>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="/account/profile">Moje dane</a>
+              <a class="dropdown-item" href="/account/change">Zmień hasło</a>
+              <a class="dropdown-item" href="/account/logout">Wyloguj...</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>

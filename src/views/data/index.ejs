@@ -1,0 +1,97 @@
+<div class="row">
+    <div class="col-md-12 m-auto">
+        <h2 class="mt-2">Dane magazynowe z dnia <%= date.name %></h2>
+        <select class="form-control selectpicker" data-live-search="true" id="selectSPProduct">
+            <option value="-1" >Wybierz inny dzień:</option>
+            <% if(typeof dni != 'undefined'){ dni.forEach(function(dzien) { %> 
+                <option value="<%= dzien.name %>"><%= dzien.name %></option>
+            <% })} %> 
+        </select>
+        <hr>
+        <h4 class="mt-2">Inwentarz Pół-Produktów</h4>
+        <div id="table"></div>
+    </div>
+  </div>
+
+<script>
+    (() => {
+        let tableData = '<%- JSON.stringify(tableData) %>';
+        tableData = JSON.parse(tableData);
+        
+        $('#selectSPProduct').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
+            const o = $('#selectSPProduct option:selected');
+            const name = o.val();
+
+            if(name == "-1")
+                return;
+            
+            
+            location.href = `/data/info/${encodeURIComponent(name)}`
+
+        });
+
+        //console.log(tableData)
+        const table = new Tabulator("#table", {
+            data: tableData,
+            layout:"fitColumns",      //fit columns to width of table
+            pagination:"local",       //paginate the data
+            pagination: false,
+            paginationSize: 20,         
+            paginationCounter:"rows", //display count of paginated rows in footer
+            columnDefaults:{
+                tooltip:true,         //show tool tips on cells
+            },
+            columns:[           
+                {title: "_id", field:"_id", visible:false, headerTooltip:true},      
+                {title:"Nazwa Pół-Produktu", field:"name", headerTooltip:true},
+                {title:"Sprzedaż w J.", field:"iloscSprzedazy", headerTooltip:true},
+                {title:"Straty w J.", field:"iloscStrat", headerTooltip:true},
+                {title:"Sugerowany stan w J.", field:"sugerownyStanU", headerTooltip:true},
+                {title:"Rzeczywisty stan w J.", field:"faktycznyStanU", headerTooltip:true},
+                {title:"Różnica w J.", field:"roznicaStanu", headerTooltip:true},
+                {title:"Jednostka", field:"unit", headerTooltip:true},
+                {title:"Sugerowany stan w P.J.", field:"sugerownyStanUS", headerTooltip:true},
+                {title:"Rzeczywisty stan w P.J.", field:"faktycznyStanUS", headerTooltip:true},
+                {title:"PodJednostka", field:"unitSub", headerTooltip:true},
+                {title:"Sugerowany stan w J.G.", field:"sugerownyStanUM", headerTooltip:true},
+                {title:"Rzeczywisty stan w J.G", field:"faktycznyStanUM", headerTooltip:true},
+                {title:"JednostkaGłówna", field:"unitMain", headerTooltip:true},
+            ],
+            locale:true,
+            langs:{
+                "pl":{
+                    "data":{
+                        "loading":"Ładowanie", //data loader text
+                        "error":"Błąd", //data error text
+                    },
+                    "groups":{ //copy for the auto generated item count in group header
+                        "item":"element", //the singular  for item
+                        "items":"elementy", //the plural for items
+                    },
+                    "pagination":{
+                        "page_size":"Rozmiar strony", //label for the page size select element
+                        "page_title":"Pokaż stronę",//tooltip text for the numeric page button, appears in front of the page number (eg. "Show Page" will result in a tool tip of "Show Page 1" on the page 1 button)
+                        "first":"Pierwsza", //text for the first page button
+                        "first_title":"Przejdź do pierwszej strony", //tooltip text for the first page button
+                        "last":"Ostatnia",
+                        "last_title":"Przejdź do ostatniej strony",
+                        "prev":"Poprzednia",
+                        "prev_title":"Przejdź do poprzedniej strony",
+                        "next":"Następna",
+                        "next_title":"Przejdź do następnej strony",
+                        "all":"Wszystkie",
+                        "counter":{
+                            "showing": "Wyświetlone",
+                            "of": "z",
+                            "rows": "wierszy",
+                            "pages": "stron",
+                        }
+                    }
+                }
+            },
+        });
+    })();
+
+
+
+</script>

@@ -1,0 +1,186 @@
+<div class="row">
+    <div class="col-md-12 m-auto">
+      <div class="card card-body">
+        <h1 class="m-2">Dodaj nowy Produkt</h1>
+        <div class="p-2 my-2">
+            <form id="addSPPForm" method="post">
+                <div class="mb-3">
+                    <label class="form-label" for="name">Nazwa</label>
+                    <input class="form-control" name="name" id="name" type="text" placeholder="Nazwa"/>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="price">Cena</label>
+                    <input class="form-control" name="price" id="price" type="number" min="0" step="10" placeholder="Cena"/>
+                    <div class="form-text">
+                        Cena musi być podana w formacie ##%% gdzie ## to złotówki a %% to grosze.
+                    </div>
+                    <div class="form-text">
+                        np. 2340 = 24.40zł 
+                    </div>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="disabled" name="disabled">
+                    <label class="form-check-label" for="disabled">
+                      Czy zablokowany?
+                    </label>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="stoarage">Lista Pół-Produktów</label>
+                    <select class="form-control selectpicker" data-live-search="true" id="selectSPProduct">
+                        <option value="-1" >Wybierz Pół-Produkt aby dodać</option>
+                        <% if(typeof polProdukty != 'undefined'){ polProdukty.forEach(function(polProdukt) { %> 
+                            <option value="<%= polProdukt._id %>" unit="<%= polProdukt.unit %>"><%= polProdukt.name %></option>
+                        <% })} %> 
+                    </select>    
+                    <div class="form-text mb-3">
+                        Dodaj pół-produkty do tabeli a następnie zmień ich ilość w komórce ilość
+                    </div>
+                    <div id="table"></div>         
+                </div>
+
+                <div id="hiddenInputs"></div>
+
+                <button class="btn btn-success float-end" id="submitButton" type="submit">Zatwierdź</button>
+            </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    
+
+  <script>
+    let products_data = '<%- JSON.stringify(polProdukty) %>';
+    let __cell;
+    (async () =>{
+
+
+    const removeIcon = function(cell, formatterParams, onRendered){ //plain text value
+        return '<i class="fa-solid fa-trash customColor-red"></i>';
+    };
+    
+    let mapOfSPProducts = new Map();
+
+    const updateHidenInputs = (list) => {
+        let newHtml = '';
+        $('#hiddenInputs').html('');
+        for(let pp of list){
+            console.log("elementsCreator", pp)
+           let _idsEle = `<input type="hidden" name="_ids" value="${pp._id}" />`;
+           let amountEle = `<input type="hidden" name="amount" value="${pp.amount}" />`;
+           
+           newHtml += (_idsEle + amountEle);
+           //$('#hiddenInputs').append(_idsEle);
+           //$('#hiddenInputs').append(amountEle);
+           console.log(_idsEle);
+           console.log(amountEle);
+        }
+        $('#hiddenInputs').html(newHtml);
+    }
+
+    const tableRefresh = (withTableHardReset) =>{
+        let newTable = [];
+        mapOfSPProducts.forEach((value, key) => {
+            newTable.push(value);
+        })
+
+        console.log("tableRefresh:", newTable);
+        
+        if(withTableHardReset)
+            table.setData(newTable);
+
+        updateHidenInputs(newTable);
+        console.log(newTable);
+    }
+
+    const cellRemove = (cell) => {
+        let cellData = cell.getRow().getData();
+        mapOfSPProducts.delete(cellData._id);
+        tableRefresh(true);
+        
+    }
+
+    const cellEdited = (cell) =>{
+        let cellData = cell.getRow().getData();
+        
+        mapOfSPProducts.set(cellData._id, cellData);
+        console.log(cellData);
+        tableRefresh(false);
+    }
+
+    $('#selectSPProduct').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
+        const o = $('#selectSPProduct option:selected');
+        const _id = o.val();
+        const name = o.text();
+        const unit = o.attr('unit');
+
+        if(_id == "-1")
+            return;
+        
+        if(mapOfSPProducts.has(_id))
+            return;
+        mapOfSPProducts.set(_id, {_id, name, amount: 0, unit});
+        tableRefresh(true);
+
+        console.log(_id, name, unit);
+    });
+
+
+    const table = await new Tabulator("#table", {
+        layout:"fitColumns",      //fit columns to width of table
+        pagination:"local",       //paginate the data
+        pagination: false,
+        paginationSize: 20,         
+        paginationCounter:"rows", //display count of paginated rows in footer
+        initialSort:[             //set the initial sort order of the data
+            {column:"magazynName", dir:"asc"},
+        ],
+        columnDefaults:{
+            tooltip:true,         //show tool tips on cells
+        },
+        columns:[           
+            {title: "_id", field:"_id", visible:false, headerTooltip:true},      
+            {title:"Nazwa Pół-Produktu", field:"name", headerTooltip:true},
+            {title:"Ilość", field:"amount", headerTooltip:true, editor:"input", cellEdited:function(cell){cellEdited(cell)}},
+            {title:"Jednostka", field:"unit", headerTooltip:true},
+            {title:"Usuń", formatter:removeIcon, width:80, hozAlign:"center", headerTooltip:true, cellClick:function(e, cell){cellRemove(cell)}},
+        ],
+        locale:true,
+        langs:{
+            "pl":{
+                "data":{
+                    "loading":"Ładowanie", //data loader text
+                    "error":"Błąd", //data error text
+                },
+                "groups":{ //copy for the auto generated item count in group header
+                    "item":"element", //the singular  for item
+                    "items":"elementy", //the plural for items
+                },
+                "pagination":{
+                    "page_size":"Rozmiar strony", //label for the page size select element
+                    "page_title":"Pokaż stronę",//tooltip text for the numeric page button, appears in front of the page number (eg. "Show Page" will result in a tool tip of "Show Page 1" on the page 1 button)
+                    "first":"Pierwsza", //text for the first page button
+                    "first_title":"Przejdź do pierwszej strony", //tooltip text for the first page button
+                    "last":"Ostatnia",
+                    "last_title":"Przejdź do ostatniej strony",
+                    "prev":"Poprzednia",
+                    "prev_title":"Przejdź do poprzedniej strony",
+                    "next":"Następna",
+                    "next_title":"Przejdź do następnej strony",
+                    "all":"Wszystkie",
+                    "counter":{
+                        "showing": "Wyświetlone",
+                        "of": "z",
+                        "rows": "wierszy",
+                        "pages": "stron",
+                    }
+                }
+            }
+        },
+      });
+    })();
+
+    
+    
+    
+    </script>

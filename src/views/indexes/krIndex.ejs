@@ -1,0 +1,60 @@
+<div class="row mt-2">
+    <div class="col-md-12 col-lg-6">
+        <div class="card border-primary mb-3">
+            <div class="card-header">Najważniejsze linki</div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><a href="/storages/add/"><i class="fa-solid fa-link mr-1"></i>Dodaj Magazyn</a></li>
+                <li class="list-group-item"><a href="/products/add/"><i class="fa-solid fa-link mr-1"></i>Dodaj Produkt</a></li>
+                <li class="list-group-item"><a href="/spproducts/add/"><i class="fa-solid fa-link mr-1"></i>Dodaj Pól-Produkt</a></li>
+                <li class="list-group-item"><a href="/sale/add"><i class="fa-solid fa-link mr-1"></i>Przeglądaj Sprzedaż</a></li>
+                <li class="list-group-item"><a href="/data/add"><i class="fa-solid fa-link mr-1"></i>Przeglądaj Straty</a></li>
+                <li class="list-group-item"><a href="/storages/inv/add"><i class="fa-solid fa-link mr-1"></i>Przeglądaj Inwentarz</a></li>
+                <li class="list-group-item"><a href="/supply/info"><i class="fa-solid fa-link mr-1"></i>Przeglądaj Dostawy</a></li>
+                <li class="list-group-item"><a href="/data/info"><i class="fa-solid fa-link mr-1"></i>Przeglądaj Podsumowania z dnia</a></li>
+              </ul>
+        </div>
+    </div>
+    <div class="col-md-12 col-lg-6">
+        <div class="card border-primary mb-3">
+            <div class="card-header">Raporty wymagające zatwierdzenia</div>
+            <div class="card-body mt-0">
+                <% if(sprzedazTA.length != 0){ %> 
+                    <h5 class="card-title">Sprzedaż:</h5>
+                    <hr class="m-0">
+                    <ul class="list-group list-group-flush">
+                    <% sprzedazTA.forEach(function(sprzedaz) { %> 
+                        <li class="list-group-item"><a href="/sale/add/<%= encodeURIComponent(sprzedaz.name) %>"><i class="fa-solid fa-cash-register"></i> z dnia <%= sprzedaz.name %></a></li>
+                    <% }) %>
+                    </ul>
+                <%} %>
+                <% if(stratyTA.length != 0){ %> 
+                    <h5 class="card-title">Straty:</h5>
+                    <hr class="m-0">
+                    <ul class="list-group list-group-flush">
+                    <% stratyTA.forEach(function(straty) { %> 
+                        <li class="list-group-item"><a href="/data/add/<%= encodeURIComponent(straty.name) %>"><i class="fa-solid fa-trash-can"></i> z dnia <%= straty.name %></a></li>
+                    <% }) %>
+                    </ul>
+                <%} %>  
+                <% if(inwentarzTA.length != 0){ %> 
+                    <h5 class="card-title">Inwentarz:</h5>
+                    <hr class="m-0">
+                    <ul class="list-group list-group-flush">
+                    <% inwentarzTA.forEach(function(inv) { %> 
+                        <li class="list-group-item"><a href="/storages/inv/add/<%= encodeURIComponent(inv.name) %>"><i class="fa-solid fa-warehouse"></i> z dnia <%= inv.name %></a></li>
+                    <% }) %>
+                    </ul>
+                <%} %>  
+                <% if(dostawaTA.length != 0){ %> 
+                    <h5 class="card-title">Dostawy:</h5>
+                    <hr class="m-0">
+                    <ul class="list-group list-group-flush">
+                    <% dostawaTA.forEach(function(dostawa) { %> 
+                        <li class="list-group-item"><a href="/supply/info/<%= encodeURIComponent(dostawa.name) %>"><i class="fa-solid fa-truck-field"></i> z dnia <%= dostawa.name %></a></li>
+                    <% }) %>
+                    </ul>
+                <%} %>  
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,177 @@
+<div class="row">
+    <div class="col-md-12 m-auto">
+      <div class="card card-body">
+        <h1 class="m-2">Lista Produktów  </h1>
+        <div id="table"></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Remove Modal -->
+  <div class="modal fade" id="removeModal" tabindex="-1" aria-labelledby="removeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="removeModalLabel">Czy na pewno chcesz usunąć produkt?</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+        </div>
+        <div class="modal-body">
+          <p class="fs-5">Produkt o nazwie: <span id="removeModal_productName" class="fw-bold">_nazwa_</span> zostanie usunięty.</p>
+          <p class="fs-6">Czy jesteś tego pewny?</p>
+        </div>
+        <form id="removeForm" method="post" target="_self" action="/products/remove">
+            <input type="hidden" name="productId" id="removeModal_productId"/>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">Anuluj</button>
+                <button type="submit" class="btn btn-danger">Usuń</button>
+            </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    let products_data = '<%- JSON.stringify(produkty) %>';
+    (async () =>{
+
+
+    const removeIcon = function(cell, formatterParams, onRendered){ //plain text value
+        return '<i class="fa-solid fa-trash customColor-red"></i>';
+    };
+
+    const editIcon = function(cell, formatterParams, onRendered){ //plain text value
+        return '<i class="fa-solid fa-pen-to-square customColor-yellow"></i>';
+    };
+
+    const removeModal = new bootstrap.Modal(document.getElementById('removeModal'));
+    
+    let mapOfSPProducts = new Map();
+
+    const updateHidenInputs = (list) => {
+        let newHtml = '';
+        $('#hiddenInputs').html('');
+        for(let pp of list){
+            console.log("elementsCreator", pp)
+           let _idsEle = `<input type="hidden" name="_ids" value="${pp._id}" />`;
+           let amountEle = `<input type="hidden" name="amount" value="${pp.amount}" />`;
+           
+           newHtml += (_idsEle + amountEle);
+           //$('#hiddenInputs').append(_idsEle);
+           //$('#hiddenInputs').append(amountEle);
+           console.log(_idsEle);
+           console.log(amountEle);
+        }
+        $('#hiddenInputs').html(newHtml);
+    }
+
+    const tableRefresh = (withTableHardReset) =>{
+        let newTable = [];
+        mapOfSPProducts.forEach((value, key) => {
+            newTable.push(value);
+        })
+        
+        if(withTableHardReset)
+            table.setData(newTable);
+
+        updateHidenInputs(newTable);
+        console.log(newTable);
+    }
+
+    const cellRemove = (cell) => {
+        let cellData = cell.getRow().getData();
+        //mapOfSPProducts.delete(cellData._id);
+        //tableRefresh(true);
+        console.log(cellData);
+        $('#removeModal_productId').val(cellData._id);
+        $('#removeModal_productName').text(cellData.name);
+        removeModal.show();
+    }
+
+    const cellEdited = (cell) =>{
+        let cellData = cell.getRow().getData();
+        
+        mapOfSPProducts.set(cellData._id, cellData);
+        console.log(cellData);
+        tableRefresh(false);
+    }
+
+    $('#selectSPProduct').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
+        const o = $('#selectSPProduct option:selected');
+        const _id = o.val();
+        const name = o.text();
+        const unit = o.attr('unit');
+
+        if(_id == "-1")
+            return;
+        
+        if(mapOfSPProducts.has(_id))
+            return;
+        mapOfSPProducts.set(_id, {_id, name, amount: 0, unit});
+        tableRefresh(true);
+
+        console.log(_id, name, unit);
+    });
+
+    const selectToEdit = (e, cell) => {
+        let name = cell.getRow().getData().name;
+        location.href = `/products/edit/${name}`;
+    }
+    
+    const table = await new Tabulator("#table", {
+        data:products_data,
+        layout:"fitColumns",      //fit columns to width of table
+        pagination:"local",       //paginate the data
+        pagination: false,
+        paginationSize: 20,         
+        paginationCounter:"rows", //display count of paginated rows in footer
+        initialSort:[             //set the initial sort order of the data
+            {column:"magazynName", dir:"asc"},
+        ],
+        columnDefaults:{
+            tooltip:true,         //show tool tips on cells
+        },
+        columns:[           
+            {title: "_id", field:"_id", visible:false, headerTooltip:true},      
+            {title:"Nazwa Produktu", field:"name", headerTooltip:true},
+            {title:"Cena", field:"price", headerTooltip:true},
+            {title:"Wyłączony", field:"isDisabled", width:80, headerTooltip:true, formatter:"tickCross", sorter:"boolean", hozAlign:"center"},
+            {title:"Edytuj", formatter:editIcon, width:80, hozAlign:"center", cellClick:function(e, cell){selectToEdit(e, cell)}},
+            {title:"Usuń", formatter:removeIcon, width:80, hozAlign:"center", headerTooltip:true, cellClick:function(e, cell){cellRemove(cell)}},
+        ],
+        locale:true,
+        langs:{
+            "pl":{
+                "data":{
+                    "loading":"Ładowanie", //data loader text
+                    "error":"Błąd", //data error text
+                },
+                "groups":{ //copy for the auto generated item count in group header
+                    "item":"element", //the singular  for item
+                    "items":"elementy", //the plural for items
+                },
+                "pagination":{
+                    "page_size":"Rozmiar strony", //label for the page size select element
+                    "page_title":"Pokaż stronę",//tooltip text for the numeric page button, appears in front of the page number (eg. "Show Page" will result in a tool tip of "Show Page 1" on the page 1 button)
+                    "first":"Pierwsza", //text for the first page button
+                    "first_title":"Przejdź do pierwszej strony", //tooltip text for the first page button
+                    "last":"Ostatnia",
+                    "last_title":"Przejdź do ostatniej strony",
+                    "prev":"Poprzednia",
+                    "prev_title":"Przejdź do poprzedniej strony",
+                    "next":"Następna",
+                    "next_title":"Przejdź do następnej strony",
+                    "all":"Wszystkie",
+                    "counter":{
+                        "showing": "Wyświetlone",
+                        "of": "z",
+                        "rows": "wierszy",
+                        "pages": "stron",
+                    }
+                }
+            }
+        },
+      });
+    })();
+
+  </script>
+  
