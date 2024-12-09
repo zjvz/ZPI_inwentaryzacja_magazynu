@@ -1,0 +1,107 @@
+<div class="row">
+    <div class="col-md-12 m-auto">
+      <div class="card card-body">
+        <h2 class="mt-2">Lista dostawy z dnia <%= dostawa.name %></h2>
+        <select class="form-control selectpicker" data-live-search="true" id="selectSPProduct">
+            <option value="-1" >Wybierz inny dzień:</option>
+            <% if(typeof dostawy != 'undefined'){ dostawy.forEach(function(_dostawa) { %> 
+                <option value="<%= _dostawa.name %>"><%= _dostawa.name %></option>
+            <% })} %> 
+        </select>
+        <hr>
+        <h4 class="mt-2">Lista dostarczonych Pół-Produktów</h4>
+        <div id="Ptable"></div>
+        <div class="mt-2">
+            <button class="btn btn-success float-end" id="submitButton" type="submit">Potwierdź poprawność</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (async () =>{
+    let table = '<%- JSON.stringify(table) %>';
+    table = JSON.parse(table);
+
+    $('#selectSPProduct').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
+        const o = $('#selectSPProduct option:selected');
+        const name = o.val();
+
+        if(name == "-1")
+            return;
+        
+        
+        location.href = `/supply/info/${encodeURIComponent(name)}`
+
+    });
+
+    $('#submitButton').click(async () => {
+        const response = await fetch('', {
+            method: 'POST',
+            mode: 'cors',
+            cache: 'no-cache', 
+            credentials: 'same-origin', 
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+            body: JSON.stringify({"Status": "OK"}) // body data type must match "Content-Type" header
+        });
+
+        const res = await response.json();
+        console.log(res);
+
+    })
+
+
+    const Ptable = await new Tabulator("#Ptable", {
+        data: table    ,
+        movableRows: false,
+        layout:"fitColumns",      //fit columns to width of table
+        movableColumns:true,      //allow column order to be changed
+        columnDefaults:{
+            tooltip:true,         //show tool tips on cells
+        },
+        columns:[                 //define the table columns
+            {title:"Nazwa", field:"name", headerTooltip:true, headerSort:false},
+            {title:"Ilość sztuk", field:"amount", headerTooltip:true, headerSort:false},
+            {title:"Jednostka Główna", field:"unitMain", headerTooltip:true, headerSort:false},
+        ],
+        locale:true,
+        langs:{
+            "pl":{
+                "data":{
+                    "loading":"Ładowanie", //data loader text
+                    "error":"Błąd", //data error text
+                },
+                "groups":{ //copy for the auto generated item count in group header
+                    "item":"element", //the singular  for item
+                    "items":"elementy", //the plural for items
+                },
+                "pagination":{
+                    "page_size":"Rozmiar strony", //label for the page size select element
+                    "page_title":"Pokaż stronę",//tooltip text for the numeric page button, appears in front of the page number (eg. "Show Page" will result in a tool tip of "Show Page 1" on the page 1 button)
+                    "first":"Pierwsza", //text for the first page button
+                    "first_title":"Przejdź do pierwszej strony", //tooltip text for the first page button
+                    "last":"Ostatnia",
+                    "last_title":"Przejdź do ostatniej strony",
+                    "prev":"Poprzednia",
+                    "prev_title":"Przejdź do poprzedniej strony",
+                    "next":"Następna",
+                    "next_title":"Przejdź do następnej strony",
+                    "all":"Wszystkie",
+                    "counter":{
+                        "showing": "Wyświetlone",
+                        "of": "z",
+                        "rows": "wierszy",
+                        "pages": "stron",
+                    }
+                }
+            }
+        },
+    });
+
+  })();
+  
+  
+  </script>

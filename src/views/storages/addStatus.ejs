@@ -1,0 +1,149 @@
+<div class="row">
+    <div class="col-md-12 m-auto">
+      <div class="card card-body">
+        <h2 class="mt-2">Wprowadzanie danych magazynowych z początku dnia <%= date.name %></h2>
+        <select class="form-control selectpicker" data-live-search="true" id="selectSPProduct">
+            <option value="-1" >Wybierz inny dzień:</option>
+            <% if(typeof dni != 'undefined'){ dni.forEach(function(dzien) { %> 
+                <option value="<%= dzien.name %>"><%= dzien.name %></option>
+            <% })} %> 
+        </select>
+        <hr>
+        <h4 class="mt-2">Inwentarz Pół-Produktów</h4>
+        <div id="PPtable"></div>
+        <div class="mt-2">
+            <button class="btn btn-success float-end" id="submitButton">Zatwierdź</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <script>
+    const dataToArray = (data) => {
+        let ppArray = [];
+        let i = 0;
+        for(let polProdukt of data.polProdukty){
+            const _id = polProdukt._id;
+            const name = polProdukt.name;
+            const amountUM = data.pPAmountJG[i];
+            const unitMain = polProdukt.unitMain;
+            const amountUS = data.pPAmountPJ[i];
+            const unitSub = polProdukt.unitSub;
+            const amountU = data.pPAmountJ[i];
+            const unit = polProdukt.unit;
+            const newEle = { _id, name, amountUM, unitMain, unitMain, amountUS, unitSub, amountU, unit};
+            ppArray.push(newEle);
+            i++;
+        }
+
+        
+        return ppArray
+    }
+  
+  (async () =>{
+    const dateData = '<%= date.name %>';
+    let invData = '<%- JSON.stringify(inv) %>';
+    invData = JSON.parse(invData);
+    const  ppArray = dataToArray(invData);
+    
+    console.log(ppArray);
+
+    $('#selectSPProduct').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
+        const o = $('#selectSPProduct option:selected');
+        const name = o.val();
+
+        if(name == "-1")
+            return;
+        
+        
+        location.href = `/storages/inv/add/${encodeURIComponent(name)}`
+
+    });
+
+    $('#submitButton').click(async () => {
+        let PPtableData = PPtable.getData();
+
+        let polProdukty = [];
+        let pPAmountJG = [];
+        let pPAmountPJ = [];
+        let pPAmountJ = [];
+
+        for(let PPtableRow of PPtableData){
+            polProdukty.push(PPtableRow._id);
+            pPAmountJG.push(PPtableRow.amountUM);
+            pPAmountPJ.push(PPtableRow.amountUS);
+            pPAmountJ.push(PPtableRow.amountU);
+        }
+
+        console.log(polProdukty, pPAmountJG, pPAmountPJ, pPAmountJ);
+
+        const data = {dateData, polProdukty, pPAmountJG, pPAmountPJ, pPAmountJ};
+
+        await fetch('/storages/inv/add', {
+            method: 'POST', // *GET, POST, PUT, DELETE, etc.
+            headers: {
+            'Content-Type': 'application/json'
+            // 'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            redirect: 'follow', // manual, *follow, error
+            body: JSON.stringify(data) // body data type must match "Content-Type" header
+        });
+    })
+  
+    const PPtable = await new Tabulator("#PPtable", {
+        data: ppArray,
+        movableRows: false,
+        layout:"fitColumns",      //fit columns to width of table
+        movableColumns:true,      //allow column order to be changed
+        columnDefaults:{
+            tooltip:true,         //show tool tips on cells
+        },
+        columns:[                 //define the table columns
+            {title:"_id", field:"_id", headerTooltip:true, headerSort:false, visible:false},
+            {title:"Nazwa", field:"name", headerTooltip:true, headerSort:false},
+            {title:"Ilość J.G.", editor:"number", field:"amountUM", headerTooltip:true, headerSort:false},
+            {title:"Jednostka Główna", field:"unitMain", headerTooltip:true, headerSort:false},
+            {title:"Ilość P.J.", editor:"number", field:"amountUS", headerTooltip:true, headerSort:false},
+            {title:"PodJednostka", field:"unitSub", headerTooltip:true, headerSort:false},
+            {title:"Ilość J.", editor:"number", field:"amountU", headerTooltip:true, headerSort:false},
+            {title:"Jednostka", field:"unit", headerTooltip:true, headerSort:false},
+        ],
+        locale:true,
+        langs:{
+            "pl":{
+                "data":{
+                    "loading":"Ładowanie", //data loader text
+                    "error":"Błąd", //data error text
+                },
+                "groups":{ //copy for the auto generated item count in group header
+                    "item":"element", //the singular  for item
+                    "items":"elementy", //the plural for items
+                },
+                "pagination":{
+                    "page_size":"Rozmiar strony", //label for the page size select element
+                    "page_title":"Pokaż stronę",//tooltip text for the numeric page button, appears in front of the page number (eg. "Show Page" will result in a tool tip of "Show Page 1" on the page 1 button)
+                    "first":"Pierwsza", //text for the first page button
+                    "first_title":"Przejdź do pierwszej strony", //tooltip text for the first page button
+                    "last":"Ostatnia",
+                    "last_title":"Przejdź do ostatniej strony",
+                    "prev":"Poprzednia",
+                    "prev_title":"Przejdź do poprzedniej strony",
+                    "next":"Następna",
+                    "next_title":"Przejdź do następnej strony",
+                    "all":"Wszystkie",
+                    "counter":{
+                        "showing": "Wyświetlone",
+                        "of": "z",
+                        "rows": "wierszy",
+                        "pages": "stron",
+                    }
+                }
+            }
+        },
+    });
+  })();
+  
+  
+  </script>
+  

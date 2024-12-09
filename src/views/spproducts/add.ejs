@@ -1,0 +1,44 @@
+<div class="row">
+    <div class="col-md-12 m-auto">
+      <div class="card card-body">
+        <h1 class="m-2">Dodaj nowy Pół-Produkt</h1>
+        <div class="p-2 my-2">
+            <form id="addSPPForm" method="post">
+                <div class="mb-3">
+                    <label class="form-label" for="name">Nazwa</label>
+                    <input class="form-control" name="name" id="name" type="text" placeholder="Nazwa"/>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="stoarage">Magazyn</label>
+                    <select class="form-select" name="storage" id="stoarage">
+                        <% if(typeof storages != 'undefined'){ storages.forEach(function(storage) { %> 
+                        <option value="<%= storage.shortcut %>"><%= storage.name %></option>
+                        <% })} %> 
+                      </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="unitMain">Jednostka Główna</label>
+                    <input class="form-control" name="unitMain" id="unitMain" type="text" placeholder="Jednostka Główna"/>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="unitSub">Podjednostka</label>
+                    <input class="form-control" name="unitSub" id="unitSub" type="text" placeholder="Podjednostka"/>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="multiplayerSubToMain">Ilość Podjednostki w Jednostce Głównej</label>
+                    <input class="form-control" name="multiplayerSubToMain" id="multiplayerSubToMain" type="number" min="0" placeholder="Mnożnik"/>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="unit">Jednostka</label>
+                    <input class="form-control" name="unit" id="unit" type="text" placeholder="Jednostka"/>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="multiplayerUnitToSub">Ilość Jednostki w Podjednostce</label>
+                    <input class="form-control" name="multiplayerUnitToSub" id="multiplayerUnitToSub" type="number" min="0" placeholder="Mnożnik"/>
+                </div>
+                <button class="btn btn-success float-end" id="submitButton" type="submit">Zatwierdź</button>
+            </form>
+        </div>
+      </div>
+    </div>
+  </div>

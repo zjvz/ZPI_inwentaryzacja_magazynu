@@ -1,0 +1,103 @@
+<div class="row mt-5">
+    <div class="col-md-6 m-auto">
+      <div class="card card-body">
+        <h1 class="text-center mb-3">
+          <i class="fas fa-user-plus"></i> Tworzenie nowego konta
+        </h1>
+        <form action="/users/add" method="POST">
+          <div class="form-group">
+            <label for="fName">Imię:</label>
+            <input
+              type="text"
+              id="fName"
+              name="fName"
+              class="form-control"
+              placeholder="Wpisz imię"
+              value="<%= typeof newUser != 'undefined' ? newUser.fName : '' %>"
+            />
+          </div>
+          <div class="form-group">
+            <label for="lName">Nazwisko:</label>
+            <input
+              type="text"
+              id="lName"
+              name="lName"
+              class="form-control"
+              placeholder="Wpisz nazwisko"
+              value="<%= typeof newUser != 'undefined' ? newUser.lName : '' %>"
+            />
+          </div>
+          <div class="form-group">
+            <label for="role">Wybierz rolę:</label>
+            <select class="form-control" name="role" id="role">
+              <option value="Manager">Manager</option>
+              <option value="Kierownik Restauracji">Kierownik Restauracji</option>
+              <% if (user.role == 'Admin') { %>
+              <option value="Admin">Admin</option>
+              <% } %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="login">Login:</label>
+            <input
+              type="text"
+              id="login"
+              name="login"
+              class="form-control"
+              placeholder="Wpisz login"
+              value="<%= typeof newUser != 'undefined' ? newUser.login : '' %>"
+            />
+          </div>
+          <div class="form-group">
+            <label for="email">Email:</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="form-control"
+              placeholder="Wpisz email"
+              value="<%= typeof newUser != 'undefined' ? newUser.email : '' %>"
+            />
+          </div>
+          <div class="form-group">
+            <label for="password">Hasło:</label>
+            <div class="input-group">
+              <input
+                type="text"
+                id="password"
+                name="password"
+                class="form-control"
+                placeholder="Wpisz hasło"
+                value="<%= typeof randomPassword != 'undefined' ? randomPassword : '' %>"
+              />
+              <div class="input-group-append">
+                <button class="btn btn-outline-secondary" type="button" onclick="randomPassword()"><i class="fa-solid fa-shuffle"></i></button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="address">Adres:</label>
+            <input
+              type="text"
+              id="address"
+              name="address"
+              class="form-control"
+              placeholder="Wpisz adres"
+              value="<%= typeof newUser != 'undefined' ? newUser.address : '' %>"
+            />
+          </div>
+          <button type="submit" class="mt-2 btn btn-primary btn-success float-end">
+            Dodaj użytkownika
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const randomPassword = () =>{
+      console.log("test");
+      document.getElementById('password').value = Math.random().toString(36).substr(2, 10).toUpperCase();
+    }
+  </script>

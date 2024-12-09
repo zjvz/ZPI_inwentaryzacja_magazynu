@@ -1,0 +1,218 @@
+<div class="row">
+    <div class="col-md-12 m-auto">
+      <div class="card card-body">
+        <h1 class="m-2">Lista Pół-Produktów  </h1>
+        <div id="table"></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Edit Modal -->
+  <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModalLabel">Edycja Pół-Produktu "<span id="editModal_nameTitle">_nazwa_</span>"</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+        </div>
+        <div class="modal-body">
+          <form id="contactForm" method="post" action="/spproducts/api">
+            <div class="mb-3">
+                <label class="form-label" for="editModal_name">Nazwa</label>
+                <input class="form-control" name="name" id="editModal_name" type="text" placeholder="Nazwa" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="editModal_storage">Magazyn</label>
+              <select class="form-select" name="storage" id="editModal_storage" aria-label="storage">
+                <% if(typeof storages != 'undefined'){ storages.forEach(function(storage) { %> 
+                  <option value="<%= storage.shortcut %>"><%= storage.name %></option>
+                  <% })} %> 
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="unitMain">Jednostka Główna</label>
+              <input class="form-control" name="unitMain" id="editModal_unitMain" type="text" placeholder="Jednostka Główna"/>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="unitSub">Podjednostka</label>
+                <input class="form-control" name="unitSub" id="editModal_unitSub" type="text" placeholder="Podjednostka"/>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="multiplayerSubToMain">Ilość Podjednostki w Jednostce Głównej</label>
+                <input class="form-control" name="multiplayerSubToMain" id="editModal_multiplayerSubToMain" type="number" min="0" placeholder="Mnożnik"/>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="unit">Jednostka</label>
+                <input class="form-control" name="unit" id="editModal_unit" type="text" placeholder="Jednostka"/>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="multiplayerUnitToSub">Ilość Jednostki w Podjednostce</label>
+                <input class="form-control" name="multiplayerUnitToSub" id="editModal_multiplayerUnitToSub" type="number" min="0" placeholder="Mnożnik"/>
+            </div>
+            <input type="hidden" name="prevName" id="editModal_namePrev"/>
+            <input type="hidden" name="type" value="edit" />
+            <div class="modal-footer">
+              <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Anuluj</button>
+              <button type="submit" class="btn btn-success">Zapisz</button>
+          </div>
+        </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Remove Modal -->
+  <div class="modal fade" id="removeModal" tabindex="-1" aria-labelledby="removeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="removeModalLabel">Czy na pewno chcesz usunąć pół-produkt?</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+        </div>
+        <div class="modal-body">
+          <p class="fs-5">Pół-Produkt <span id="removeModal_nameTitle" class="fw-bold">_nazwa_</span> zostanie usunięty.</p>
+          <p class="fs-6">Czy jesteś tego pewny?</p>
+        </div>
+        <form id="removeForm" method="post" target="_self" action="/spproducts/api">
+            <input type="hidden" name="prevName" id="removeModal_name"/>
+            <input type="hidden" name="type" value="remove" />
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">Anuluj</button>
+                <button type="submit" class="btn btn-danger">Usuń</button>
+            </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+  
+  (async () =>{
+    let storagesData = '<%- JSON.stringify(storages) %>';
+    storagesData = JSON.parse(storagesData);
+    const mapOfStorages = new Map();
+    for(let storage of storagesData){
+      mapOfStorages.set(storage.name, storage.shortcut);
+    }
+
+    let td = await fetch('/spproducts/api/');
+    td = await td.json();
+
+
+    let i = 0;
+    for(let _td of td){
+        td[i].magazynName = td[i].magazyn.name;
+        td[i].magazynShortcut = td[i].magazyn.shortcut;
+        delete td[i].magazyn;
+        i++;
+    }
+    
+
+    const editModal = new bootstrap.Modal(document.getElementById('editModal'))
+    const removeModal = new bootstrap.Modal(document.getElementById('removeModal'))
+  
+  
+    const editIcon = function(cell, formatterParams, onRendered){ //plain text value
+        return '<i class="fa-solid fa-pen-to-square customColor-yellow"></i>';
+    };
+  
+    const removeIcon = function(cell, formatterParams, onRendered){ //plain text value
+        return '<i class="fa-solid fa-trash customColor-red"></i>';
+    };
+  
+    const testCallback = (eventType, e, cell) => {
+        let cellData = cell.getRow().getData();
+        if(eventType == 'edit'){
+          document.getElementById('editModal_nameTitle').innerText = cellData.name;
+          document.getElementById('editModal_name').value = cellData.name;
+          document.getElementById('editModal_namePrev').value = cellData.name;
+
+          document.getElementById('editModal_storage').value = mapOfStorages.get(cellData.magazynName);
+
+          document.getElementById('editModal_unitMain').value = cellData.unitMain;
+          document.getElementById('editModal_unitSub').value = cellData.unitSub;
+          document.getElementById('editModal_unit').value = cellData.unit;
+
+          document.getElementById('editModal_multiplayerSubToMain').value = cellData.multiplayerSubToMain;
+          document.getElementById('editModal_multiplayerUnitToSub').value = cellData.multiplayerUnitToSub;
+  
+          editModal.show();
+        }
+  
+        if(eventType == 'remove'){
+            document.getElementById('removeModal_nameTitle').innerText = cellData.name;
+            document.getElementById('removeModal_name').value = cellData.name;
+            removeModal.show();
+        }
+  
+        console.log(eventType, e, cell);
+    }
+  
+  
+    const table = await new Tabulator("#table", {
+        data:td,           //load row data from array
+        layout:"fitColumns",      //fit columns to width of table
+        pagination:"local",       //paginate the data
+        paginationSize:20,         //allow 7 rows per page of data
+        paginationCounter:"rows", //display count of paginated rows in footer
+        movableColumns:true,      //allow column order to be changed
+        initialSort:[             //set the initial sort order of the data
+            {column:"magazynName", dir:"asc"},
+        ],
+        columnDefaults:{
+            tooltip:true,         //show tool tips on cells
+        },
+        columns:[                 //define the table columns
+            {title:"Nazwa", field:"name", headerTooltip:true},
+            {title:"Magazyn", field:"magazynName", headerTooltip:true},
+            {title:"Jednostka Główna", field:"unitMain", headerTooltip:true},
+            {title:"PodJednostka", field:"unitSub", headerTooltip:true},
+            {title:"Ilość PJ w JG", field:"multiplayerSubToMain", headerTooltip:true},
+            {title:"Jednostka", field:"unit", headerTooltip:true},
+            {title:"Ilość J w PJ", field:"multiplayerUnitToSub", headerTooltip:true},
+            {title:"Edytuj", formatter:editIcon, width:80, hozAlign:"center", headerTooltip:true, cellClick:function(e, cell){testCallback('edit', e, cell)}},
+            {title:"Usuń", formatter:removeIcon, width:80, hozAlign:"center", headerTooltip:true, cellClick:function(e, cell){testCallback('remove', e, cell)}},
+        ],
+        locale:true,
+        langs:{
+            "pl":{
+                "data":{
+                    "loading":"Ładowanie", //data loader text
+                    "error":"Błąd", //data error text
+                },
+                "groups":{ //copy for the auto generated item count in group header
+                    "item":"element", //the singular  for item
+                    "items":"elementy", //the plural for items
+                },
+                "pagination":{
+                    "page_size":"Rozmiar strony", //label for the page size select element
+                    "page_title":"Pokaż stronę",//tooltip text for the numeric page button, appears in front of the page number (eg. "Show Page" will result in a tool tip of "Show Page 1" on the page 1 button)
+                    "first":"Pierwsza", //text for the first page button
+                    "first_title":"Przejdź do pierwszej strony", //tooltip text for the first page button
+                    "last":"Ostatnia",
+                    "last_title":"Przejdź do ostatniej strony",
+                    "prev":"Poprzednia",
+                    "prev_title":"Przejdź do poprzedniej strony",
+                    "next":"Następna",
+                    "next_title":"Przejdź do następnej strony",
+                    "all":"Wszystkie",
+                    "counter":{
+                        "showing": "Wyświetlone",
+                        "of": "z",
+                        "rows": "wierszy",
+                        "pages": "stron",
+                    }
+                }
+            }
+        },
+    });
+  })();
+  
+  window.addEventListener('resize', function(){
+      table.redraw(true);
+  });
+  
+  
+  
+  </script>
+  

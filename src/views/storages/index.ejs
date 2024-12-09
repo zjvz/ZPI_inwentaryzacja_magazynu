@@ -1,0 +1,167 @@
+<div class="row">
+    <div class="col-md-12 m-auto">
+      <div class="card card-body">
+        <h1 class="m-2">Lista magazynów</h1>
+        <div id="table"></div>
+      </div>
+    </div>
+  </div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModalLabel">Edytuj magazyn: <span id="editModal_nameTitle">_nazwa_</span></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+        </div>
+        <div class="modal-body">
+            <form id="editForm" method="post" target="_self" action="/storages/edit">
+                <div class="mb-3">
+                    <label class="form-label" for="editModal_shortcut">Skrótowa nazwa</label>
+                    <input class="form-control" name="shortcut" id="editModal_shortcut" type="text" placeholder="Skrótowa nazwa" data-sb-validations="required" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="editModal_nameNew">Pełna nazwa</label>
+                    <input class="form-control" name="name" id="editModal_nameNew" type="text" placeholder="Pełna nazwa" data-sb-validations="required" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="editModal_location">Lokalizacja magazynu</label>
+                    <input class="form-control" name="location" id="editModal_location" type="text" placeholder="Lokalizacja" data-sb-validations="required" />
+                </div>
+                <input type="hidden" name="prevName" id="editModal_name" />
+                <input type="hidden" name="type" value="edit" />
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="submit" class="btn btn-success" >Zapisz</button>
+                </div>
+            </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Remove Modal -->
+<div class="modal fade" id="removeModal" tabindex="-1" aria-labelledby="removeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="removeModalLabel">Czy na pewno chcesz usunąć magazyn?</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+        </div>
+        <div class="modal-body">
+          <p class="fs-5">Magazyn o nazwie: <span id="removeModal_nameTitle" class="fw-bold">_nazwa_</span> zostanie usunięty.</p>
+          <p class="fs-6">Czy jesteś tego pewny?</p>
+        </div>
+        <form id="removeForm" method="post" target="_self" action="/storages/edit">
+            <input type="hidden" name="prevName" id="removeModal_name"/>
+            <input type="hidden" name="type" value="remove" />
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">Anuluj</button>
+                <button type="submit" class="btn btn-danger">Usuń</button>
+            </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<script>
+
+(async () =>{
+    let table_data = '<%- JSON.stringify(data) %>';
+    table_data = JSON.parse(table_data);
+    //console.log(table_data);
+    const editModal = new bootstrap.Modal(document.getElementById('editModal'))
+    const removeModal = new bootstrap.Modal(document.getElementById('removeModal'))
+
+
+    const editIcon = function(cell, formatterParams, onRendered){ //plain text value
+        return '<i class="fa-solid fa-pen-to-square customColor-yellow"></i>';
+    };
+
+    const removeIcon = function(cell, formatterParams, onRendered){ //plain text value
+        return '<i class="fa-solid fa-trash customColor-red"></i>';
+    };
+
+    const testCallback = (eventType, e, cell) => {
+        let cellData = cell.getRow().getData();
+        if(eventType == 'edit'){
+            document.getElementById('editModal_nameTitle').innerText = cellData.name;
+            document.getElementById('editModal_name').value = cellData.name;
+            document.getElementById('editModal_nameNew').value = cellData.name;
+            document.getElementById('editModal_location').value = cellData.location;
+            document.getElementById('editModal_shortcut').value = cellData.shortcut;
+            editModal.show();
+        }
+
+        if(eventType == 'remove'){
+            document.getElementById('removeModal_name').value = cellData.name;
+            document.getElementById('removeModal_nameTitle').innerText = cellData.name;
+            removeModal.show();
+        }
+
+        console.log(eventType, e, cell);
+    }
+
+
+    const table = await new Tabulator("#table", {
+        data:table_data,           //load row data from array
+        layout:"fitColumns",      //fit columns to width of table
+        responsiveLayout:"hide",  //hide columns that dont fit on the table
+        addRowPos:"top",          //when adding a new row, add it to the top of the table
+        history:true,             //allow undo and redo actions on the table
+        pagination:"local",       //paginate the data
+        paginationSize:20,         
+        paginationCounter:"rows", //display count of paginated rows in footer
+        movableColumns:true,      //allow column order to be changed
+        initialSort:[             //set the initial sort order of the data
+            {column:"name", dir:"asc"},
+        ],
+        columnDefaults:{
+            tooltip:true,         //show tool tips on cells
+        },
+        columns:[                 //define the table columns
+            {title:"Skrót", width:80, field:"shortcut"},
+            {title:"Nazwa", width:80, field:"name"},
+            {title:"Lokalizacja", field:"location", widthGrow:3},
+            {title:"Edytuj", formatter:editIcon, width:80, hozAlign:"center", cellClick:function(e, cell){testCallback('edit', e, cell)}},
+            {title:"Usuń", formatter:removeIcon, width:80, hozAlign:"center", cellClick:function(e, cell){testCallback('remove', e, cell)}},
+        ],
+        locale:true,
+        langs:{
+            "pl":{
+                "data":{
+                    "loading":"Ładowanie", //data loader text
+                    "error":"Błąd", //data error text
+                },
+                "groups":{ //copy for the auto generated item count in group header
+                    "item":"element", //the singular  for item
+                    "items":"elementy", //the plural for items
+                },
+                "pagination":{
+                    "page_size":"Rozmiar strony", //label for the page size select element
+                    "page_title":"Pokaż stronę",//tooltip text for the numeric page button, appears in front of the page number (eg. "Show Page" will result in a tool tip of "Show Page 1" on the page 1 button)
+                    "first":"Pierwsza", //text for the first page button
+                    "first_title":"Przejdź do pierwszej strony", //tooltip text for the first page button
+                    "last":"Ostatnia",
+                    "last_title":"Przejdź do ostatniej strony",
+                    "prev":"Poprzednia",
+                    "prev_title":"Przejdź do poprzedniej strony",
+                    "next":"Następna",
+                    "next_title":"Przejdź do następnej strony",
+                    "all":"Wszystkie",
+                    "counter":{
+                        "showing": "Wyświetlone",
+                        "of": "z",
+                        "rows": "wierszy",
+                        "pages": "stron",
+                    }
+                }
+            }
+        },
+    });
+})();
+
+
+
+</script>

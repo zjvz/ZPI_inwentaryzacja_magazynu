@@ -1,0 +1,193 @@
+<div class="row">
+  <div class="col-md-12 m-auto">
+    <div class="card card-body">
+      <h1 class="m-2">Lista użytkowników  </h1>
+      <div id="table"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editModalLabel">Edytuj użytkownika: <span id="editModal_loginTitle">_nazwa_</span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+      </div>
+      <div class="modal-body">
+        <form id="contactForm" method="post" target="_self" action="/users/api">
+          <div class="mb-3">
+              <label class="form-label" for="editModal_imie">Imię</label>
+              <input class="form-control" name="fName" id="editModal_imie" type="text" placeholder="Imię" />
+          </div>
+          <div class="mb-3">
+              <label class="form-label" for="editModal_nazwisko">Nazwisko</label>
+              <input class="form-control" name="lName" id="editModal_nazwisko" type="text" placeholder="Nazwisko"/>
+          </div>
+          <div class="mb-3">
+              <label class="form-label" for="editModal_rola">Rola</label>
+              <select class="form-select" name="role" id="editModal_rola" aria-label="Rola">
+                  <option value="Manager">Manager</option>
+                  <option value="Kierownik Restauracji">Kierownik Restauracji</option>
+                  <option value="Admin">Admin</option>
+              </select>
+          </div>
+          <div class="mb-3">
+              <label class="form-label" for="editModal_login">Login</label>
+              <input class="form-control" name="login" id="editModal_login" type="text" placeholder="Login"/>
+          </div>
+          <div class="mb-3">
+              <label class="form-label" for="editModal_email">Email</label>
+              <input class="form-control" name="email" id="editModal_email" type="email" placeholder="Email"/>
+          </div>
+          <div class="mb-3">
+              <label class="form-label" for="editModal_adres">Adres</label>
+              <input class="form-control" name="address" id="editModal_adres" type="text" placeholder="Adres" />
+          </div>
+          <input type="hidden" name="prevLogin" id="editModal_loginPrev"/>
+          <input type="hidden" name="type" value="edit" />
+          <div class="modal-footer">
+            <button type="button" class="btn btn-warning" data-bs-dismiss="modal">Anuluj</button>
+            <button type="submit" class="btn btn-success">Zapisz</button>
+        </div>
+      </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Remove Modal -->
+<div class="modal fade" id="removeModal" tabindex="-1" aria-labelledby="removeModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="removeModalLabel">Czy na pewno chcesz usunąć użytkownika?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+      </div>
+      <div class="modal-body">
+        <p class="fs-5">Użytkownik o nazwie: <span id="removeModal_loginTitle" class="fw-bold">_nazwa_</span> zostanie usunięty.</p>
+        <p class="fs-6">Czy jesteś tego pewny?</p>
+      </div>
+      <form id="removeForm" method="post" target="_self" action="/users/api">
+          <input type="hidden" name="prevLogin" id="removeModal_login"/>
+          <input type="hidden" name="type" value="remove" />
+          <div class="modal-footer">
+              <button type="button" class="btn btn-success" data-bs-dismiss="modal">Anuluj</button>
+              <button type="submit" class="btn btn-danger">Usuń</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+
+(async () =>{
+  let table_data = await fetch('/users/api/');
+  table_data = await table_data.json();
+  console.log(table_data);
+  //console.log(table_data);
+  const editModal = new bootstrap.Modal(document.getElementById('editModal'))
+  const removeModal = new bootstrap.Modal(document.getElementById('removeModal'))
+
+
+  const editIcon = function(cell, formatterParams, onRendered){ //plain text value
+      return '<i class="fa-solid fa-pen-to-square customColor-yellow"></i>';
+  };
+
+  const removeIcon = function(cell, formatterParams, onRendered){ //plain text value
+      return '<i class="fa-solid fa-trash customColor-red"></i>';
+  };
+
+  const testCallback = (eventType, e, cell) => {
+      let cellData = cell.getRow().getData();
+      if(eventType == 'edit'){
+        document.getElementById('editModal_loginTitle').innerText = cellData.login;
+        document.getElementById('editModal_login').value = cellData.login;
+        document.getElementById('editModal_loginPrev').value = cellData.login;
+        document.getElementById('editModal_imie').value = cellData.fName;
+        document.getElementById('editModal_nazwisko').value = cellData.lName;
+        document.getElementById('editModal_rola').value = cellData.role;
+        document.getElementById('editModal_email').value = cellData.email;
+        document.getElementById('editModal_adres').value = cellData.address;
+
+        editModal.show();
+      }
+
+      if(eventType == 'remove'){
+          document.getElementById('removeModal_login').value = cellData.login;
+          document.getElementById('removeModal_loginTitle').innerText = cellData.login;
+          removeModal.show();
+      }
+
+      console.log(eventType, e, cell);
+  }
+
+
+  const table = await new Tabulator("#table", {
+      data:table_data,           //load row data from array
+      layout:"fitColumns",      //fit columns to width of table
+      pagination:"local",       //paginate the data
+      paginationSize: 20,         
+      paginationCounter:"rows", //display count of paginated rows in footer
+      movableColumns:true,      //allow column order to be changed
+      initialSort:[             //set the initial sort order of the data
+          {column:"login", dir:"asc"},
+      ],
+      columnDefaults:{
+          tooltip:true,         //show tool tips on cells
+      },
+      columns:[                 //define the table columns
+          {title:"Imię", field:"fName"},
+          {title:"Nazwisko", field:"lName"},
+          {title:"Adres", field:"address"},
+          {title:"Rola", field:"role"},
+          {title:"Login", field:"login"},
+          {title:"Email", field:"email"},
+          {title:"Adres", field:"address"},
+          {title:"Edytuj", formatter:editIcon, width:80, hozAlign:"center", cellClick:function(e, cell){testCallback('edit', e, cell)}},
+          {title:"Usuń", formatter:removeIcon, width:80, hozAlign:"center", cellClick:function(e, cell){testCallback('remove', e, cell)}},
+      ],
+      locale:true,
+      langs:{
+          "pl":{
+              "data":{
+                  "loading":"Ładowanie", //data loader text
+                  "error":"Błąd", //data error text
+              },
+              "groups":{ //copy for the auto generated item count in group header
+                  "item":"element", //the singular  for item
+                  "items":"elementy", //the plural for items
+              },
+              "pagination":{
+                  "page_size":"Rozmiar strony", //label for the page size select element
+                  "page_title":"Pokaż stronę",//tooltip text for the numeric page button, appears in front of the page number (eg. "Show Page" will result in a tool tip of "Show Page 1" on the page 1 button)
+                  "first":"Pierwsza", //text for the first page button
+                  "first_title":"Przejdź do pierwszej strony", //tooltip text for the first page button
+                  "last":"Ostatnia",
+                  "last_title":"Przejdź do ostatniej strony",
+                  "prev":"Poprzednia",
+                  "prev_title":"Przejdź do poprzedniej strony",
+                  "next":"Następna",
+                  "next_title":"Przejdź do następnej strony",
+                  "all":"Wszystkie",
+                  "counter":{
+                      "showing": "Wyświetlone",
+                      "of": "z",
+                      "rows": "wierszy",
+                      "pages": "stron",
+                  }
+              }
+          }
+      },
+  });
+})();
+
+window.addEventListener('resize', function(){
+    table.redraw(true);
+});
+
+
+
+</script>

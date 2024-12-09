@@ -1,0 +1,138 @@
+<div class="row">
+    <div class="col-md-12 m-auto">
+      <div class="card card-body">
+        <h2 class="mt-2">Planer dostawy</h2>
+        <div class="form-text mb-3">
+            Aby zaplanować dostawę wprowadź ilość dni, na jaką chcesz aby wystarczyło pół-produktów, oraz procentową wartość zapasu.
+        </div>
+        <div class="row">
+            <div class="col ">
+                <label for="daysAmount" class="form-label">Ilość dni:</label>
+                <input type="number" min="1" max="10" step="1" class="form-control" value="3" id="daysAmount" placeholder="dni">
+            </div>
+            <div class="col ">
+                <label class="form-label" for="overageAmount">Zapas:</label>
+                <div class="input-group">
+                <div class="input-group-text">%</div>
+                    <input type="number" min="5" max="100" step="5" value="10" class="form-control" id="overageAmount" placeholder="% zapasu">
+                </div>
+            </div>
+        </div>
+        <div class="mt-2">
+            <button class="btn btn-success float-end" id="submitButton" type="submit">Szacuj dostawę</button>
+        </div>
+          
+        <hr>
+        <h4 class="mt-2">Proponowana dostawa <span id="dateTitle"></span></h4>
+        <div id="Ptable">---Jeszcze nie obliczono---</div>
+        <div class="mt-2">
+            <button class="btn btn-success float-end d-none" id="addButton" type="submit">Zaplanuj dostawę</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+
+const Ptable = new Tabulator("#Ptable", {
+        movableRows: false,
+        layout:"fitColumns",      //fit columns to width of table
+        movableColumns:true,      //allow column order to be changed
+        columnDefaults:{
+            tooltip:true,         //show tool tips on cells
+        },
+        columns:[                 //define the table columns
+            {title:"_id", field:"_id", headerTooltip:true, headerSort:false, visible:false},
+            {title:"Nazwa", field:"name", headerTooltip:true, headerSort:false},
+            {title:"Ilość sztuk", editor:"number", field:"estimatedAmount", headerTooltip:true, headerSort:false},
+            {title:"Jednostka Główna", field:"unitMain", headerTooltip:true, headerSort:false},
+        ],
+        locale:true,
+        langs:{
+            "pl":{
+                "data":{
+                    "loading":"Ładowanie", //data loader text
+                    "error":"Błąd", //data error text
+                },
+                "groups":{ //copy for the auto generated item count in group header
+                    "item":"element", //the singular  for item
+                    "items":"elementy", //the plural for items
+                },
+                "pagination":{
+                    "page_size":"Rozmiar strony", //label for the page size select element
+                    "page_title":"Pokaż stronę",//tooltip text for the numeric page button, appears in front of the page number (eg. "Show Page" will result in a tool tip of "Show Page 1" on the page 1 button)
+                    "first":"Pierwsza", //text for the first page button
+                    "first_title":"Przejdź do pierwszej strony", //tooltip text for the first page button
+                    "last":"Ostatnia",
+                    "last_title":"Przejdź do ostatniej strony",
+                    "prev":"Poprzednia",
+                    "prev_title":"Przejdź do poprzedniej strony",
+                    "next":"Następna",
+                    "next_title":"Przejdź do następnej strony",
+                    "all":"Wszystkie",
+                    "counter":{
+                        "showing": "Wyświetlone",
+                        "of": "z",
+                        "rows": "wierszy",
+                        "pages": "stron",
+                    }
+                }
+            }
+        },
+    });
+
+$('#submitButton').click(async () => {
+    const daysAmount = $('#daysAmount').val();
+    const overageAmount = $('#overageAmount').val();
+
+    let data = {daysAmount, overageAmount};
+
+    const response = await fetch('/supply/api/info', {
+        method: 'POST',
+        mode: 'cors',
+        cache: 'no-cache', 
+        credentials: 'same-origin', 
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+        body: JSON.stringify(data) // body data type must match "Content-Type" header
+    });
+
+    const table = await response.json();
+    await Ptable.setData(table.table);
+    $('#addButton').removeClass('d-none');
+    $('#dateTitle').text(table.supplyDate);
+
+    console.log();
+})
+
+$('#addButton').click(async () => {
+    const daysAmount = $('#daysAmount').val();
+    const overageAmount = $('#overageAmount').val();
+
+    let data = {daysAmount, overageAmount};
+
+    const table = await Ptable.getData();
+
+    data.table = table;
+
+    const response = await fetch('/supply/api/edit', {
+        method: 'POST',
+        mode: 'cors',
+        cache: 'no-cache', 
+        credentials: 'same-origin', 
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+        body: JSON.stringify(data) // body data type must match "Content-Type" header
+    });
+
+    let newData = await response.json();
+    location.href = `/supply/info/${encodeURIComponent(newData.name)}`;
+
+    console.log();
+})
+
+</script>
